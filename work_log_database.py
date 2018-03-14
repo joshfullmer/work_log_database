@@ -10,24 +10,52 @@ def initialize():
     DATABASE.create_tables([Task], safe=True)
 
 
-def menu_loop():
+def menu_loop(message=None):
     """Show the main menu."""
-    choice = None
+    if not message:
+        message = ""
+    while True:
+        # Main menu input loop
+        menu_input = main_menu(message).lower()
+        while True:
+            if menu_input in menu:
+                break
+            else:
+                menu_input = main_menu("Selection not recognized. Try again.")
 
-    while choice != 'q':
-        clear()
-        print("Enter 'q' to quit.")
-        for k, v in menu.items():
-            print("({}) {}".format(k, v.__doc__))
-        choice = input("> ").lower().strip()
+        # Runs selected function
+        menu[menu_input]()
 
-        if choice in menu:
-            clear()
-            menu[choice]()
+        # Quit program if selection is q
+        if menu_input == 'q':
+            break
+
+
+def main_menu(message=None):
+    """
+    Runs the main menu.
+
+    Takes one argument 'message' to allow control over a potential
+    error message.  Shows a default message if none is provided.
+
+    Returns the user selection from the main menu.
+    """
+    clear()
+    print("WORK LOG\n========\n")
+    if message:
+        print(message+"\n")
+    else:
+        print("What would you like to do?\n")
+    print("(A)dd a task")
+    print("(V)iew all tasks")
+    print("(S)earch for a task")
+    print("(Q)uit")
+    return input("> ")
 
 
 def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    # os.system('cls' if os.name == 'nt' else 'clear')
+    pass
 
 
 def add_task():
@@ -147,7 +175,6 @@ def search_tasks():
 
 
 def employee_search():
-    """#TODO: Need to split into smaller functions"""
     message = ""
     while True:
         clear()
@@ -161,60 +188,56 @@ def employee_search():
             message = "Entry not recognized. Try again."
             continue
         if choice == 'l':
-            employees = []
-            for task in Task.select(Task.employee).distinct():
-                employees.append(task.employee)
-            while True:
-                clear()
-                message = ""
-                print("{}Which employee's tasks do you want to view?\n".format(
-                    message))
-                for i, employee in enumerate(employees):
-                    print("({}) {}".format(i, employee))
-                employee_index = input("> ")
-                try:
-                    employee_index = int(employee_index)
-                    if (employee_index < 0 or
-                            employee_index > len(employees) - 1):
-                        raise ValueError
-                except ValueError:
-                    message = "Entry not recognized. Try again."
-                    continue
-                employee = employees[employee_index]
-                return Task.select().where(Task.employee == employee)
+            return list_of_employees()
         if choice == 'e':
-            employee = get_employee()
-            emp_match = (Task.select(Task.employee)
-                         .distinct()
-                         .where(Task.employee ** "%{}%".format(employee)))
-            if len(emp_match) > 1:
-                employees = []
-                for emp in emp_match:
-                    employees.append(emp.employee)
-                message = ""
-                while True:
-                    clear()
-                    print("Multiple employees found with the same name. "
-                          "Select one.\n")
-                    for i, emp in enumerate(employees):
-                        print("({}) {}".format(i, emp))
-                    print("\n{}\n".format(message))
-                    employee_index = input("> ")
-                    try:
-                        employee_index = int(employee_index)
-                        if (employee_index < 0 or
-                                employee_index > len(employees) - 1):
-                            raise ValueError
-                    except ValueError:
-                        message = "Entry not recognized. Try again."
-                        continue
-                    employee = employees[employee_index]
-                    return Task.select().where(Task.employee == employee)
-            else:
-                if len(emp_match) == 0:
-                    return []
-                employee = emp_match[0].employee
-                return Task.select().where(Task.employee == employee)
+            return employee_by_entry()
+
+
+def list_of_employees():
+    employees = []
+    for task in Task.select(Task.employee).distinct():
+        employees.append(task.employee)
+    message = "Which employee's tasks do you want to view?"
+    return employee_from_selection(employees, message)
+
+
+def employee_by_entry():
+    employee = get_employee()
+    emp_match = (Task.select(Task.employee)
+                 .distinct()
+                 .where(Task.employee ** "%{}%".format(employee)))
+    if len(emp_match) > 1:
+        employees = []
+        for emp in emp_match:
+            employees.append(emp.employee)
+        message = "Multiple employees found with similar name."
+        return employee_from_selection(employees, message)
+    else:
+        if len(emp_match) == 0:
+            return []
+        employee = emp_match[0].employee
+        return Task.select().where(Task.employee == employee)
+
+
+def employee_from_selection(employees, message):
+    error = "====="
+    while True:
+        clear()
+        print("{}\n".format(message))
+        for i, emp in enumerate(employees):
+            print("({}) {}".format(i, emp))
+        print("\n{}\n".format(error))
+        employee_index = input("> ")
+        try:
+            employee_index = int(employee_index)
+            if (employee_index < 0 or
+                    employee_index > len(employees) - 1):
+                raise ValueError
+        except ValueError:
+            error = "Entry not recognized. Try again."
+            continue
+        employee = employees[employee_index]
+        return Task.select().where(Task.employee == employee)
 
 
 def duration_search():
@@ -250,7 +273,7 @@ def task_page_menu(tasks):
         clear()
         task = tasks[index]
         print("TASK\n====\n")
-        print("Task ID#{}".format(task.id))
+        print("Task ID# {}".format(task.id))
         print("Employee: {}".format(task.employee))
         print("Title: {}".format(task.title))
         print("Duration: {}".format(task.duration))
@@ -331,10 +354,16 @@ def delete_task(task_id):
         input("Entry deleted! Press Enter to return to the main menu.")
 
 
+def quit_program():
+    clear()
+    print("Thanks for using the work log!\n")
+
+
 menu = OrderedDict([
     ('a', add_task),
     ('v', view_all_tasks),
     ('s', search_tasks),
+    ('q', quit_program),
 ])
 
 

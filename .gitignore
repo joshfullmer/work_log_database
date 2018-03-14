@@ -1,2 +1,6 @@
 Pipfile
 Pipfile.lock
+.coverage
+task.pyc
+test_work_log_database.pyc
+work_log_database.pyc
