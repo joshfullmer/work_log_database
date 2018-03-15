@@ -54,8 +54,8 @@ def main_menu(message=None):
 
 
 def clear():
-    # os.system('cls' if os.name == 'nt' else 'clear')
-    pass
+    """Runs clear screen system command based on OS"""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def add_task():
@@ -72,6 +72,10 @@ def add_task():
 
 
 def get_employee():
+    """
+    Runs loop to capture user input for employee and validate
+    as being less than or equal to 60 characters
+    """
     message = ""
     while True:
         clear()
@@ -84,6 +88,10 @@ def get_employee():
 
 
 def get_duration():
+    """
+    Runs loop to capture user input for duration and validate
+    as being a positive whole number.
+    """
     message = ""
     while True:
         clear()
@@ -101,6 +109,10 @@ def get_duration():
 
 
 def get_title():
+    """
+    Runs loop to capture user input for title and validate
+    as being less than or equal to 140 characters
+    """
     message = ""
     while True:
         clear()
@@ -113,12 +125,19 @@ def get_title():
 
 
 def get_notes():
+    """
+    Capture user input for notes. No validation needed,
+    """
     clear()
     return input(
         "Enter any additional notes related to the task (optional)\n> ")
 
 
 def get_date(message=None):
+    """
+    Runs loop to capture user input for date and validate
+    as being a date in the MM/DD/YYYY format
+    """
     if not message:
         message = ""
     while True:
@@ -135,13 +154,22 @@ def get_date(message=None):
 
 
 def view_all_tasks():
-    """View all tasks"""
+    """
+    Get all tasks from the database and send them to the task pagination
+    """
     tasks = Task.select()
     task_page_menu(tasks)
 
 
 def search_tasks():
-    """Search for a task"""
+    """
+    Runs loop for taking user input on searching through tasks,
+    validate that it's a available choice,
+    runs the proper search based on input, and sends the filtered tasks
+    to the task pagination.
+
+    Also detects when a search filter returns no results.
+    """
     search_menu = OrderedDict([
         ('e', employee_search),
         ('t', duration_search),
@@ -175,6 +203,10 @@ def search_tasks():
 
 
 def employee_search():
+    """
+    Runs employee search loop for user input, validates user input,
+    then returns a list of tasks based on the filtered results.
+    """
     message = ""
     while True:
         clear()
@@ -194,6 +226,10 @@ def employee_search():
 
 
 def list_of_employees():
+    """
+    Generates list of employees that have tasks, then returns all of that
+    employees tasks.
+    """
     employees = []
     for task in Task.select(Task.employee).distinct():
         employees.append(task.employee)
@@ -202,6 +238,12 @@ def list_of_employees():
 
 
 def employee_by_entry():
+    """
+    Takes user input for searching for existing employee,
+    shows multiple results if they exist,
+    allows users to choose which if multiple exist,
+    and returns list of employee's tasks.
+    """
     employee = get_employee()
     emp_match = (Task.select(Task.employee)
                  .distinct()
@@ -220,6 +262,10 @@ def employee_by_entry():
 
 
 def employee_from_selection(employees, message):
+    """
+    Takes a list of employees, and returns all tasks from the user selected
+    employee
+    """
     error = "====="
     while True:
         clear()
@@ -241,11 +287,19 @@ def employee_from_selection(employees, message):
 
 
 def duration_search():
+    """
+    Uses existing function 'get_duration' to get a valid duration from the
+    user and return all tasks with that duration
+    """
     duration = get_duration()
     return Task.select().where(Task.duration == duration)
 
 
 def keyword_search():
+    """
+    Takes user input for a keyword and returns all tasks that have the given
+    keyword in the task title or note.
+    """
     clear()
     keyword = input("What keyword would you like to search by?\n> ")
     return Task.select().where(Task.title.contains(keyword) |
@@ -253,6 +307,11 @@ def keyword_search():
 
 
 def date_search():
+    """
+    Uses the existing 'get_date' function to get a valid date from a user.
+    Sets the end date to be 23:59:59 on the same day
+    Returns all tasks in that date range
+    """
     clear()
     start_date = get_date()
     end_date = datetime.datetime.combine(start_date.date(),
@@ -261,12 +320,23 @@ def date_search():
 
 
 def date_range_search():
+    """
+    Uses the existing 'get_date' function to get two valid dates from a user.
+    Returns all tasks in that date range from the two dates provided.
+    """
     start_date = get_date("Enter the beginning date in the date range.\n\n")
     end_date = get_date("Enter the end date in the date range.\n\n")
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
     return Task.select().where(Task.created_at.between(start_date, end_date))
 
 
 def task_page_menu(tasks):
+    """
+    Task pagination menu. Takes a list of tasks.  Smartly shows next and
+    previous options based on amount of tasks and position in list of tasks.
+    Validates user input for editing, deleting, and going through pages. 
+    """
     index = 0
     message = "What would you like to do?"
     while True:
@@ -316,6 +386,13 @@ def task_page_menu(tasks):
 
 
 def edit_task(task_id):
+    """
+    Runs menu for editing the task with the provided ID number.
+
+    Validates user input and runs the appropriate function based on selection.
+
+    Updates task based on the data returned by the function.
+    """
     message = "What do you want to update?"
     update = {}
     # Edit input loop
@@ -349,12 +426,20 @@ def edit_task(task_id):
 
 
 def delete_task(task_id):
+    """
+    Confirms the user wants to delete the selected task,
+    and deletes if they do.
+    """
     if input("Are you sure? [yN] ").lower() == 'y':
         Task.delete_by_id(task_id)
         input("Entry deleted! Press Enter to return to the main menu.")
 
 
 def quit_program():
+    """
+    Prints exit message.  The main menu loop contains the logic to break
+    if this is selected.
+    """
     clear()
     print("Thanks for using the work log!\n")
 
