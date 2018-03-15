@@ -43,6 +43,7 @@ class WorkLogTests(unittest.TestCase):
                            "TestTaskTitleTestTaskTitleTestTaskTitleTestTaskTi"
                            "TestTaskTitleTestTaskTitleTestTaskTitleTestTaskTi"
                            "TestTaskTitleTestTaskTitleTestTaskTitleTestTaskTi")
+        self.similar_employee = "Testy Dude"
 
     def test_db_initiate(self):
         DATABASE.close()
@@ -99,6 +100,158 @@ class WorkLogTests(unittest.TestCase):
         parsed_date = datetime.datetime.strptime(date, "%m/%d/%Y")
         mock.side_effect = ["13/12/2018", date]
         self.assertEqual(work_log_database.get_date(), parsed_date)
+
+    @patch('builtins.input', side_effect=['e', 'l', '0', 'b', 'b'])
+    def test_search_menu(self, mock):
+        work_log_database.search_tasks()
+
+    @patch('builtins.input', side_effect=['x', 'b'])
+    def test_search_menu_error(self, mock):
+        work_log_database.search_tasks()
+
+    @patch('builtins.input', side_effect=['k', 'defenestration', 'b'])
+    def test_search_menu_no_tasks(self, mock):
+        work_log_database.search_tasks()
+
+    @patch('builtins.input', side_effect=['e', 'x', 'l', '0', 'b', 'b'])
+    def test_employee_search_missing(self, mock):
+        work_log_database.search_tasks()
+
+    @patch('builtins.input')
+    def test_employee_entry(self, mock):
+        mock.side_effect = ['e', self.employee, 'b', 'b']
+        work_log_database.employee_search()
+
+    @patch('builtins.input')
+    def test_employee_entry_gt_one(self, mock):
+        mock.side_effect = [
+            'e',
+            'test',
+            '0',
+            'b',
+            'b',
+        ]
+        Task.create(
+            employee=self.similar_employee,
+            duration=self.duration,
+            title=self.title,
+            notes=self.notes,
+        )
+        work_log_database.employee_search()
+
+    @patch('builtins.input')
+    def test_employee_entry_empty(self, mock):
+        mock.side_effect = ['e', 'defenestration', 'b']
+        work_log_database.employee_search()
+
+    @patch('builtins.input', side_effect=['-1', '0'])
+    def test_employee_entry_invalid_index(self, mock):
+        employees = ['Test', 'Tester']
+        work_log_database.employee_from_selection(employees, '')
+
+    @patch('builtins.input', return_value='10')
+    def test_duration_search(self, mock):
+        work_log_database.duration_search()
+
+    @patch('builtins.input', return_value='12/12/2018')
+    def test_date_search(self, mock):
+        work_log_database.date_search()
+
+    @patch('builtins.input', side_effect=['01/01/2018', '12/12/2018'])
+    def test_date_range_search(self, mock):
+        work_log_database.date_range_search()
+
+    @patch('builtins.input', side_effect=['x', 'e', 'x', 'e', 'Doc Brown', ''])
+    def test_task_page_single(self, mock):
+        Task.create(
+            employee='Marty Mcfly',
+            duration=88,
+            title='Back in Time',
+            notes='Power of Love',
+        )
+        tasks = Task.select().where(Task.employee == 'Marty Mcfly')
+        work_log_database.task_page_menu(tasks)
+        Task.delete_by_id(tasks[0].id)
+
+    @patch('builtins.input', side_effect=['d', 'y', ''])
+    def test_task_page_delete(self, mock):
+        Task.create(
+            employee='Peter Parker',
+            duration=8,
+            title='Spiderman',
+            notes='Amazing',
+        )
+        tasks = Task.select().where(Task.employee == 'Peter Parker')
+        work_log_database.task_page_menu(tasks)
+
+    @patch('builtins.input', side_effect=['n', 'n', 'p', 'b'])
+    def test_task_page_three(self, mock):
+        Task.create(
+            employee='Marty Mcfly',
+            duration=88,
+            title='Back in Time',
+            notes='Power of Love',
+        )
+        Task.create(
+            employee='Marty Mcfly',
+            duration=88,
+            title='Back in Time',
+            notes='Power of Love',
+        )
+        Task.create(
+            employee='Marty Mcfly',
+            duration=88,
+            title='Back in Time',
+            notes='Power of Love',
+        )
+        tasks = Task.select().where(Task.employee == 'Marty Mcfly')
+        work_log_database.task_page_menu(tasks)
+        for task in tasks:
+            Task.delete_by_id(task.id)
+
+    @patch('builtins.input', side_effect=['u', '30', ''])
+    def test_edit_task_duration(self, mock):
+        Task.create(
+            employee='Peter Parker',
+            duration=8,
+            title='Spiderman',
+            notes='Amazing',
+        )
+        tasks = Task.select().where(Task.employee == 'Peter Parker')
+        work_log_database.edit_task(tasks[0].id)
+
+    @patch('builtins.input', side_effect=['t', 'Venom', ''])
+    def test_edit_task_title(self, mock):
+        Task.create(
+            employee='Peter Parker',
+            duration=8,
+            title='Spiderman',
+            notes='Amazing',
+        )
+        tasks = Task.select().where(Task.employee == 'Peter Parker')
+        work_log_database.edit_task(tasks[0].id)
+
+    @patch('builtins.input', side_effect=['n', 'The Amazing', ''])
+    def test_edit_task_notes(self, mock):
+        Task.create(
+            employee='Peter Parker',
+            duration=8,
+            title='Spiderman',
+            notes='Amazing',
+        )
+        tasks = Task.select().where(Task.employee == 'Peter Parker')
+        work_log_database.edit_task(tasks[0].id)
+
+    @patch('builtins.input', side_effect=['d', '05/04/2018', ''])
+    def test_edit_task_date(self, mock):
+        Task.create(
+            employee='Peter Parker',
+            duration=8,
+            title='Spiderman',
+            notes='Amazing',
+        )
+        tasks = Task.select().where(Task.employee == 'Peter Parker')
+        work_log_database.edit_task(tasks[0].id)
 
 
 if __name__ == '__main__':
