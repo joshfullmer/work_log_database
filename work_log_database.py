@@ -335,7 +335,7 @@ def task_page_menu(tasks):
     """
     Task pagination menu. Takes a list of tasks.  Smartly shows next and
     previous options based on amount of tasks and position in list of tasks.
-    Validates user input for editing, deleting, and going through pages. 
+    Validates user input for editing, deleting, and going through pages.
     """
     index = 0
     message = "What would you like to do?"
