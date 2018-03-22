@@ -10,6 +10,10 @@ def initialize():
     DATABASE.create_tables([Task], safe=True)
 
 
+def teardown():
+    DATABASE.close()
+
+
 def menu_loop(message=None):
     """Show the main menu."""
     if not message:
@@ -455,3 +459,4 @@ menu = OrderedDict([
 if __name__ == '__main__':
     initialize()
     menu_loop()
+    teardown()
