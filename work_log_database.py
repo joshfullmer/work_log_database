@@ -51,8 +51,9 @@ def main_menu(message=None):
     else:
         print("What would you like to do?\n")
     print("(A)dd a task")
-    print("(V)iew all tasks")
-    print("(S)earch for a task")
+    if Task.select().count() != 0:
+        print("(V)iew all tasks")
+        print("(S)earch for a task")
     print("(Q)uit")
     return input("> ")
 
@@ -162,6 +163,11 @@ def view_all_tasks():
     Get all tasks from the database and send them to the task pagination
     """
     tasks = Task.select()
+    if tasks.count() == 0:
+        clear()
+        input("No tasks exist in the database. Press ENTER to return to "
+              "the main menu")
+        return
     task_page_menu(tasks)
 
 
@@ -174,6 +180,11 @@ def search_tasks():
 
     Also detects when a search filter returns no results.
     """
+    if Task.select().count() == 0:
+        clear()
+        input("No tasks exist in the database. Press ENTER to return to "
+              "the main menu")
+        return
     search_menu = OrderedDict([
         ('e', employee_search),
         ('t', duration_search),
